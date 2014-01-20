@@ -97,6 +97,29 @@
              (fd/< a b)
              (== q [a b])))
 
+;; find all ways to create list of five elements where
+;; the previous two elements add to the third
+(let [
+      elem1 (lvar)
+      elem2 (lvar)
+      elem3 (lvar)
+      elem4 (lvar)
+      elem5 (lvar)
+      
+      domain (fd/interval 1 20)
+      ]
+  (run* [q]
+        (== q [elem1 elem2 elem3 elem4 elem5])
+        (fd/in elem1 elem2 elem3 elem4 elem5 domain)
+        (fd/< elem1 elem2)
+        (fd/< elem2 elem3)
+        (fd/< elem3 elem4)
+        (fd/< elem4 elem5)
+        
+        (fd/+ elem1 elem2 elem3)
+        (fd/+ elem2 elem3 elem4)
+        (fd/+ elem3 elem4 elem5)))
+
 ;; Lists of lvars
 ;; All possible ways of ordering 1 to 5
 (let [
@@ -108,6 +131,14 @@
         (fd/distinct lvars)
         (everyg #(fd/in % domain) lvars)))
 
+
+;; create your own simple function
+(defn inco [i i-plus-1]
+  (fd/+ i 1 i-plus-1))
+
+(run* [q] (inco 19 q))
+(run* [q] (inco q 21))
+
 ;; function that gets element (elem) at index i from col.
 (defn geto 
   ([i col elem] (geto i col elem 0))
@@ -118,33 +149,12 @@
 		          [(fd/== i cur-i) (== elem first)]
 	            [(fd/< cur-i i) (fd/+ cur-i 1 next-cur-i) (geto i rest elem next-cur-i)]))))
 
-;; (run* [q] (geto 2 [:a :b :c :d :e] q))
-;; (run* [q] (fd/in q (fd/interval 5)) (geto q [:a :b :c :d :e] :d))
+(run* [q] (geto 2 [:a :b :c :d :e] q))
+(run* [q] (fd/in q (fd/interval 5)) (geto q [:a :b :c :d :e] :d))
 
-(defn inco [i i-plus-1]
-  (fd/+ i 1 i-plus-1))
 
-(defn my-constrainto [index col]
-  (fresh [index-b index-c elem elem-b elem-c]
-               (inco index index-b)
-               (inco index-b index-c)
-               (geto index lvars elem)
-               (geto index-b lvars elem-b)
-               (geto index-c lvars elem-c)
-               (fd/< elem elem-b)
-               (fd/< elem-b elem-c)
-               (fd/+ elem elem-b elem-c)))
 
-(let [
-      lvars (repeatedly 5 lvar)
-      domain (fd/interval 1000)
-      ]
-  (run* [q]
-        (== q lvars)
-       (everyg #(fd/in % domain) lvars)
-       (my-constrainto 0 lvars)
-       (my-constrainto 1 lvars)
-       (my-constrainto 2 lvars)))
+
                
                
                
